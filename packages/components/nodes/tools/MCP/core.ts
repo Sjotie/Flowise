@@ -131,84 +131,115 @@ export class MCPToolkit extends BaseToolkit {
     }
 
     async cleanup(): Promise<void> {
-        const instanceIdForLog = this.id; // Capture for logging
-        const currentPid = this.childProcess?.pid; // Capture PID before nullifying
+        const instanceIdForLog = this.id // Capture for logging
+        const currentPid = this.childProcess?.pid // Capture PID before nullifying
 
         if (!activeToolkits.has(this)) {
-            console.log(`MCPToolkit ${instanceIdForLog}: Cleanup called, but instance not found in active registry.`);
-            return;
+            // eslint-disable-next-line no-console
+            console.log(`MCPToolkit ${instanceIdForLog}: Cleanup called, but instance not found in active registry.`)
+            return
         }
-        console.log(`Cleaning up MCPToolkit ${instanceIdForLog}` + (currentPid ? ` (PID: ${currentPid})` : ''));
-        activeToolkits.delete(this);
-        console.log(`MCPToolkit ${instanceIdForLog}: Removed from active registry.`);
+        // eslint-disable-next-line no-console
+        console.log(`Cleaning up MCPToolkit ${instanceIdForLog}` + (currentPid ? ` (PID: ${currentPid})` : ''))
+        activeToolkits.delete(this)
+        // eslint-disable-next-line no-console
+        console.log(`MCPToolkit ${instanceIdForLog}: Removed from active registry.`)
 
         // 1. Try Transport Close (Intended graceful shutdown)
         if (this.transport) {
-            console.log(`MCPToolkit ${instanceIdForLog}: Attempting transport.close()...`);
+            // eslint-disable-next-line no-console
+            console.log(`MCPToolkit ${instanceIdForLog}: Attempting transport.close()...`)
             try {
                 // Check if close method exists and call it
-                const closeMethod = (this.transport as any).close; // Look for 'close'
+                const closeMethod = (this.transport as any).close // Look for 'close'
                 if (typeof closeMethod === 'function') {
                     // Assuming close might be async or return a promise based on I/O operations
-                   await Promise.resolve(closeMethod.call(this.transport)); // Call and await potential promise
-                   console.log(`MCPToolkit ${instanceIdForLog}: transport.close() called successfully.`);
+                    await Promise.resolve(closeMethod.call(this.transport)) // Call and await potential promise
+                    // eslint-disable-next-line no-console
+                    console.log(`MCPToolkit ${instanceIdForLog}: transport.close() called successfully.`)
                 } else {
-                   console.warn(`MCPToolkit ${instanceIdForLog}: Transport object does not have a 'close' method.`);
+                    // eslint-disable-next-line no-console
+                    console.warn(`MCPToolkit ${instanceIdForLog}: Transport object does not have a 'close' method.`)
                 }
             } catch (transportErr) {
-               console.error(`MCPToolkit ${instanceIdForLog}: Error during transport.close():`, transportErr);
+                // eslint-disable-next-line no-console
+                console.error(`MCPToolkit ${instanceIdForLog}: Error during transport.close():`, transportErr)
             }
             // Nullify transport AFTER trying to close, but before killing process directly
-            this.transport = null;
+            this.transport = null
         }
 
         // 2. Force Kill Child Process if handle exists and it's potentially still running
         // (Keep this as a fallback, especially if .close() fails or process handle couldn't be obtained)
-        const processToKill = this.childProcess; // Use the captured handle
-        this.childProcess = null; // Nullify the instance variable immediately
+        const processToKill = this.childProcess // Use the captured handle
+        this.childProcess = null // Nullify the instance variable immediately
 
         if (processToKill && processToKill.pid && !processToKill.killed) {
             // Check again if the process is still running after attempting transport.close()
             // This requires a way to check process status, which might be platform-specific or unreliable.
             // For simplicity, we'll attempt kill if the handle exists, assuming close() might have failed silently.
-            console.log(`MCPToolkit ${instanceIdForLog}: Attempting to kill potentially lingering child process PID ${processToKill.pid}...`);
+            // eslint-disable-next-line no-console
+            console.log(`MCPToolkit ${instanceIdForLog}: Attempting to kill potentially lingering child process PID ${processToKill.pid}...`)
             try {
                 // Send SIGTERM first
-                const killSent = process.kill(processToKill.pid, 'SIGTERM');
-                if(killSent) {
-                   console.log(`MCPToolkit ${instanceIdForLog}: Sent SIGTERM to PID ${processToKill.pid}.`);
+                const killSent = process.kill(processToKill.pid, 'SIGTERM')
+                if (killSent) {
+                    // eslint-disable-next-line no-console
+                    console.log(`MCPToolkit ${instanceIdForLog}: Sent SIGTERM to PID ${processToKill.pid}.`)
                 } else {
-                   console.warn(`MCPToolkit ${instanceIdForLog}: Failed to send SIGTERM to PID ${processToKill.pid} (OS level issue or process already dead?).`);
-                   // Attempt SIGKILL if SIGTERM send fails
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        `MCPToolkit ${instanceIdForLog}: Failed to send SIGTERM to PID ${processToKill.pid} (OS level issue or process already dead?).`
+                    )
+                    // Attempt SIGKILL if SIGTERM send fails
                     try {
-                        process.kill(processToKill.pid, 'SIGKILL');
-                        console.log(`MCPToolkit ${instanceIdForLog}: Sent SIGKILL to PID ${processToKill.pid} as SIGTERM send failed.`);
+                        process.kill(processToKill.pid, 'SIGKILL')
+                        // eslint-disable-next-line no-console
+                        console.log(`MCPToolkit ${instanceIdForLog}: Sent SIGKILL to PID ${processToKill.pid} as SIGTERM send failed.`)
                     } catch (sigkillError: any) {
-                        if (sigkillError.code !== 'ESRCH') { // Ignore "process doesn't exist"
-                            console.error(`MCPToolkit ${instanceIdForLog}: Error sending SIGKILL to PID ${processToKill.pid}:`, sigkillError);
+                        if (sigkillError.code !== 'ESRCH') {
+                            // Ignore "process doesn't exist"
+                            // eslint-disable-next-line no-console
+                            console.error(
+                                `MCPToolkit ${instanceIdForLog}: Error sending SIGKILL to PID ${processToKill.pid}:`,
+                                sigkillError
+                            )
                         } else {
-                             console.log(`MCPToolkit ${instanceIdForLog}: SIGKILL failed for PID ${processToKill.pid}, process likely already gone (ESRCH).`);
+                            // eslint-disable-next-line no-console
+                            console.log(
+                                `MCPToolkit ${instanceIdForLog}: SIGKILL failed for PID ${processToKill.pid}, process likely already gone (ESRCH).`
+                            )
                         }
                     }
                 }
             } catch (error: any) {
-                if (error.code !== 'ESRCH') { // Ignore "process doesn't exist"
-                   console.error(`MCPToolkit ${instanceIdForLog}: Error killing process PID ${processToKill.pid}:`, error);
+                if (error.code !== 'ESRCH') {
+                    // Ignore "process doesn't exist"
+                    // eslint-disable-next-line no-console
+                    console.error(`MCPToolkit ${instanceIdForLog}: Error killing process PID ${processToKill.pid}:`, error)
                 } else {
-                   console.log(`MCPToolkit ${instanceIdForLog}: Kill failed for PID ${processToKill.pid}, process likely already gone (ESRCH).`);
+                    // eslint-disable-next-line no-console
+                    console.log(
+                        `MCPToolkit ${instanceIdForLog}: Kill failed for PID ${processToKill.pid}, process likely already gone (ESRCH).`
+                    )
                 }
             }
         } else if (currentPid) {
-           console.log(`MCPToolkit ${instanceIdForLog}: Did not attempt forceful kill for PID ${currentPid} (handle missing or process already marked killed before fallback).`);
+            // eslint-disable-next-line no-console
+            console.log(
+                `MCPToolkit ${instanceIdForLog}: Did not attempt forceful kill for PID ${currentPid} (handle missing or process already marked killed before fallback).`
+            )
         } else {
-           console.log(`MCPToolkit ${instanceIdForLog}: No child process handle was available for forceful termination.`);
+            // eslint-disable-next-line no-console
+            console.log(`MCPToolkit ${instanceIdForLog}: No child process handle was available for forceful termination.`)
         }
 
         // 3. Nullify other resources
-        this.client = null;
-        this._tools = null;
-        this.tools = [];
-        console.log(`Cleanup finished for MCPToolkit ${instanceIdForLog}.`);
+        this.client = null
+        this._tools = null
+        this.tools = []
+        // eslint-disable-next-line no-console
+        console.log(`Cleanup finished for MCPToolkit ${instanceIdForLog}.`)
     }
 }
 
