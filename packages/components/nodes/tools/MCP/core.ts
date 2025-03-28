@@ -26,6 +26,7 @@ export class MCPToolkit extends BaseToolkit {
     // Add unique ID for tracking and config hash storage
     public readonly id = `mcp-tk-${Date.now()}-${Math.random().toString(16).substring(2, 8)}`
     public configHash?: string // To store a hash/representation of the config it was created with
+    childProcess: ChildProcessWithoutNullStreams | null = null
 
     constructor(serverParams: any, transportType: 'stdio' | 'sse') {
         super()
