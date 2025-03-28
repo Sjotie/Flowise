@@ -6,6 +6,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import { ChildProcessWithoutNullStreams } from 'child_process'
 import { BaseToolkit, tool, Tool } from '@langchain/core/tools'
 // Import ZodError for specific error catching
 import { ZodError, z } from 'zod'
