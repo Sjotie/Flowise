@@ -179,7 +179,9 @@ export class MCPToolkit extends BaseToolkit {
             // This requires a way to check process status, which might be platform-specific or unreliable.
             // For simplicity, we'll attempt kill if the handle exists, assuming close() might have failed silently.
             // eslint-disable-next-line no-console
-            console.log(`MCPToolkit ${instanceIdForLog}: Attempting to kill potentially lingering child process PID ${processToKill.pid}...`)
+            console.log(
+                `MCPToolkit ${instanceIdForLog}: Attempting to kill potentially lingering child process PID ${processToKill.pid}...`
+            )
             try {
                 // Send SIGTERM first
                 const killSent = process.kill(processToKill.pid, 'SIGTERM')
